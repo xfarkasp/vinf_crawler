@@ -31,35 +31,6 @@ server, so JavaScript execution is not needed.
 
 ![Crawler architecture](diagram/vinf_crawler.drawio.png)
 
-```
-                    seed: https://world.openfoodfacts.org/
-                                   │
-                                   ▼
-   ┌──────────────────────── listing queue (FIFO) ◄──────────────────────┐
-   │                                                                     │
-   ▼                                                                     │
- visited? ──yes──► skip, enqueue guessed next page (/N → /N+1)           │
-   │ no                                                                  │
-   ▼                                                                     │
- fetch()  ── robots.txt check ── 1 s rate limit ── retries ── redirects   │
-   │                                                                     │
-   ├──► html/listings/<N>.html.gz          (raw HTML cache, gzip)        │
-   ├──► crawl_metadata.jsonl               (one record per fetch)        │
-   │                                                                     │
-   ├── regex: product links ──► product queue (FIFO, skip known barcodes)│
-   │                                 │                                   │
-   │                                 ▼                                   │
-   │                            fetch() each product                     │
-   │                                 ├──► html/products/<3 digits>/<barcode>.html.gz
-   │                                 ├──► crawl_metadata.jsonl           │
-   │                                 └──► visited_urls.txt               │
-   │                                                                     │
-   └── regex: "Next" link ── after all products done: mark page visited ─┘
-
- offline, separately:   html/products/**  ──► extractor.py (regex) ──► products_data.jsonl
-                        crawl_metadata.jsonl ──► stats.py ──► counts and sizes
-```
-
 Crawling and extraction are separate steps. The crawler only downloads and
 stores pages, so the extractor can be improved and re-run at any time without
 downloading anything again (and later moved to Spark).
