@@ -39,6 +39,7 @@ CANONICAL_URL_RE = re.compile(r'<meta\s+property="og:url"\s+content="([^"]+)"')
 BARCODE_RE = re.compile(r"/product/(\d{4,})")
 # <h1 ... itemprop="name">Nutella – 400 g</h1>
 NAME_RE = re.compile(r'<h1[^>]*itemprop="name"[^>]*>(.*?)</h1>', re.DOTALL)
+TRAILING_DASH_RE = re.compile(r"(?:\s*–)+\s*$")
 # A characteristics field: <span class="field">Brands: </span> <values> </p>
 FIELD_RE_TEMPLATE = r'<span class="field">\s*{label}\s*:?\s*</span>(.*?)</p>'
 LINK_TEXT_RE = re.compile(r"<a\b[^>]*>(.*?)</a>", re.DOTALL)
@@ -61,7 +62,7 @@ OTHER_LANGUAGE_RE = re.compile(
 LABELLED_TEXT_RE_TEMPLATE = r"<strong>\s*{label}\s*:?\s*</strong>(.*?)</div>"
 ALLERGEN_SPAN_RE = re.compile(r'<span class="allergen">(.*?)</span>', re.DOTALL)
 # Additive headings: "E322 - Lecithins"; fallback: E-numbers in ingredient text
-ADDITIVE_HEADING_RE = re.compile(r"<h4[^>]*>\s*(E\d{3,4}[a-z]?)\s+-\s+", re.IGNORECASE)
+ADDITIVE_HEADING_RE = re.compile(r"<h4[^>]*>\s*(E\d{3,4}[a-z]?)\s+-\s+([^<]*?)\s*</h4>", re.IGNORECASE)
 E_NUMBER_RE = re.compile(r"\bE\s?(\d{3,4}[a-z]?)\b", re.IGNORECASE)
 # Nutrition facts table
 NUTRITION_TABLE_RE = re.compile(r'<table[^>]*aria-label="Nutrition facts"[^>]*>(.*?)</table>', re.DOTALL)
@@ -146,8 +147,7 @@ def extract_name(page: str, brands: Optional[list], quantity: Optional[str]) -> 
     when the name already contains it), so strip those suffixes."""
     match = NAME_RE.search(page)
     name = clean_text(match.group(1)) if match else None
-    # Products without a name show their barcode as the heading.
-    if not name or name.isdigit():
+    if not name:
         return None
     if quantity:
         name = strip_suffix(name, " – " + quantity)
@@ -156,7 +156,12 @@ def extract_name(page: str, brands: Optional[list], quantity: Optional[str]) -> 
         if stripped != name:
             name = stripped
             break
-    return name or None
+    # Without a brand the heading still has its separator: "Pizza cheese – ".
+    name = TRAILING_DASH_RE.sub("", name)
+    # Products without a name show their barcode or only the quantity instead.
+    if not name or name.replace(" ", "").isdigit() or name == quantity:
+        return None
+    return name
 
 
 def extract_nutri_score(page: str) -> Optional[str]:
@@ -212,10 +217,16 @@ def extract_allergens(page: str) -> Optional[list]:
 
 
 def extract_additives(page: str, ingredients: Optional[str]) -> Optional[list]:
-    additives = ["E" + code[1:].lower() for code in ADDITIVE_HEADING_RE.findall(page)]
+    additives = ["E" + code[1:].lower() for code, _ in ADDITIVE_HEADING_RE.findall(page)]
     if not additives and ingredients:
         additives = ["E" + code.lower() for code in E_NUMBER_RE.findall(ingredients)]
     return dedupe(additives) or None
+
+
+def extract_additive_names(page: str) -> Optional[list]:
+    """Names from the additive headings, e.g. "E951 - Aspartame" -> "Aspartame"."""
+    names = [clean_text(name) for _, name in ADDITIVE_HEADING_RE.findall(page)]
+    return dedupe([n for n in names if n]) or None
 
 
 def extract_nutrition(page: str) -> Optional[dict]:
@@ -268,6 +279,7 @@ def extract_product(page: str, url: Optional[str] = None) -> dict:
         "ingredients_text": ingredients,
         "ingredients_language": ingredients_language if ingredients else None,
         "additives": extract_additives(page, ingredients),
+        "additive_names": extract_additive_names(page),
         "allergens": extract_allergens(page),
         "traces": extract_labelled_list(page, "Traces"),
         "nutrition_100g": extract_nutrition(page),

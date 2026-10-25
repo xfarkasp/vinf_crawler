@@ -62,14 +62,24 @@ REQUEST_TIMEOUT = 20  # seconds
 MAX_RETRIES = 3
 MAX_REDIRECTS = 5
 RETRY_BACKOFF = 2.0  # extra seconds per retry attempt (2s, 4s)
+# When there is no network at all (laptop asleep, Wi-Fi gone) the crawl pauses
+# and checks again after 1, 2, 4, ... minutes (at most 10) until it is back.
+OUTAGE_WAIT_START = 60
+OUTAGE_WAIT_MAX = 600
+# A listing page that keeps returning 5xx/429 is retried this many more times
+# (with the same waits) before discovery stops.
+LISTING_SERVER_ERROR_ROUNDS = 5
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[logging.StreamHandler(), logging.FileHandler(LOG_FILE, encoding="utf-8")],
-)
 log = logging.getLogger("off_crawler")
+
+
+def setup_logging() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[logging.StreamHandler(), logging.FileHandler(LOG_FILE, encoding="utf-8")],
+    )
 
 # ---------------------------------------------------------------------------
 # Fetcher
@@ -96,8 +106,6 @@ def _load_cookie() -> None:
     else:
         log.info("No session cookie configured; listing pages beyond /10 will be refused")
 
-
-_load_cookie()
 
 _robots = robotparser.RobotFileParser()
 _robots_loaded = False
@@ -152,6 +160,9 @@ class FetchResult:
     attempts: int = 0
     elapsed_ms: int = 0
     error: Optional[str] = None
+    # True when the last attempt got no HTTP response at all (DNS failure,
+    # connection refused/reset, timeout) - i.e. most likely our network is down.
+    network_error: bool = False
 
 
 def _get_following_allowed_redirects(url: str, result: FetchResult) -> Optional[requests.Response]:
@@ -202,14 +213,16 @@ def fetch(url: str) -> FetchResult:
         _wait_for_rate_limit()
         try:
             resp = _get_following_allowed_redirects(url, result)
-        except (requests.Timeout, requests.ConnectionError) as exc:
+        except (requests.Timeout, requests.ConnectionError, requests.exceptions.ChunkedEncodingError) as exc:
             result.error = f"{type(exc).__name__}: {exc}"
+            result.network_error = True
             log.warning("Attempt %d/%d failed for %s: %s", attempt, MAX_RETRIES, url, exc)
         except requests.RequestException as exc:
             result.error = f"{type(exc).__name__}: {exc}"
             log.error("Request error for %s: %s", url, exc)
             break
         else:
+            result.network_error = False
             if resp is None:
                 break
             result.status = resp.status_code
@@ -356,56 +369,129 @@ def mark_visited(url: str, path: str = VISITED_FILE) -> None:
 # Main loop
 # ---------------------------------------------------------------------------
 
+def fetch_waiting_out_outages(url: str) -> FetchResult:
+    """fetch(), but if the network is down, pause and try again until it is back.
+
+    Without this, a sleeping laptop or a Wi-Fi drop made every remaining
+    request fail and ended the crawl.
+    """
+    wait = OUTAGE_WAIT_START
+    while True:
+        result = fetch(url)
+        if not result.network_error:
+            return result
+        log.warning("Network seems to be down (%s); waiting %d s before retrying %s",
+                    result.error, wait, url)
+        time.sleep(wait)
+        wait = min(wait * 2, OUTAGE_WAIT_MAX)
+
+
+def load_failed_products(visited_codes: set, path: str = METADATA_FILE) -> list:
+    """Product URLs that failed in earlier runs and were never saved since.
+
+    Their listing page was still marked visited, so without this they would
+    never be fetched again. Pages that no longer exist (404/410) are skipped.
+    """
+    failed = {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                record = json.loads(line)
+                if (record["page_type"] == "product" and not record["html_path"]
+                        and record["status"] not in (404, 410)
+                        and record["barcode"] not in visited_codes):
+                    failed[record["barcode"]] = record["url"]
+    except FileNotFoundError:
+        pass
+    return list(failed.values())
+
+
+class _Crawl:
+    """State of one crawl run (shared by the listing and product steps)."""
+
+    def __init__(self, max_products: Optional[int]):
+        self.visited = load_visited()
+        self.visited_codes = {c for c in map(product_code, self.visited) if c}
+        self.max_products = max_products
+        self.saved = 0
+
+    def limit_reached(self) -> bool:
+        return bool(self.max_products and self.saved >= self.max_products)
+
+    def crawl_product(self, product_url: str) -> None:
+        """Download one product page; a failure is recorded and retried next run."""
+        result = fetch_waiting_out_outages(product_url)
+        if result.html is None:
+            save_metadata(result, "product")
+            return
+        save_metadata(result, "product", *save_html(result.html, product_url))
+        mark_visited(product_url)
+        self.visited_codes.add(product_code(product_url))
+        self.saved += 1
+        log.info("[%d] Saved %s", self.saved, product_url)
+
+    def fetch_listing(self, page_url: str) -> FetchResult:
+        """Fetch a listing page, giving temporary server errors a few more rounds."""
+        wait = OUTAGE_WAIT_START
+        for _ in range(LISTING_SERVER_ERROR_ROUNDS):
+            result = fetch_waiting_out_outages(page_url)
+            if result.html is not None or not (result.status == 429 or (result.status or 0) >= 500):
+                return result
+            log.warning("Listing page %s: %s; waiting %d s", page_url, result.error, wait)
+            time.sleep(wait)
+            wait = min(wait * 2, OUTAGE_WAIT_MAX)
+        return fetch_waiting_out_outages(page_url)
+
+
 def crawl(max_products: Optional[int] = None) -> None:
     """Breadth-first crawl: listing page -> its product pages -> next listing page."""
-    visited = load_visited()
-    visited_codes = {c for c in map(product_code, visited) if c}
-    listing_queue = deque(SEED_URLS)
-    saved = 0
+    state = _Crawl(max_products)
 
+    retry = load_failed_products(state.visited_codes)
+    if retry:
+        log.info("Retrying %d products that failed in earlier runs", len(retry))
+    for product_url in retry:
+        state.crawl_product(product_url)
+        if state.limit_reached():
+            log.info("Reached --max-products=%d, stopping", max_products)
+            return
+
+    listing_queue = deque(SEED_URLS)
     while listing_queue:
         page_url = listing_queue.popleft()
 
         # A listing page is only marked visited once all its products are
         # done, so on restart it can be skipped without fetching it.
-        if page_url in visited:
+        if page_url in state.visited:
             listing_queue.append(guess_next_page(page_url))
             continue
 
         log.info("Listing page %s", page_url)
-        result = fetch(page_url)
+        result = state.fetch_listing(page_url)
         if result.html is None:
             save_metadata(result, "listing")
-            log.warning("Could not fetch listing page %s, stopping discovery here", page_url)
+            log.warning("Could not fetch listing page %s (%s), stopping discovery here",
+                        page_url, result.error)
             continue
 
         links = extract_product_links(result.html)
         save_metadata(result, "listing", *save_html(result.html, page_url), links_found=len(links))
-        product_queue = deque(u for u in links if product_code(u) not in visited_codes)
+        product_queue = deque(u for u in links if product_code(u) not in state.visited_codes)
         next_url = extract_next_page(result.html, page_url)
         log.info("Found %d new products, next page: %s", len(product_queue), next_url)
 
         while product_queue:
-            product_url = product_queue.popleft()
-            result = fetch(product_url)
-            if result.html is None:
-                save_metadata(result, "product")
-                continue  # not marked visited, so it is retried on the next run
-            save_metadata(result, "product", *save_html(result.html, product_url))
-            mark_visited(product_url)
-            visited_codes.add(product_code(product_url))
-            saved += 1
-            log.info("[%d] Saved %s", saved, product_url)
-            if max_products and saved >= max_products:
+            state.crawl_product(product_queue.popleft())
+            if state.limit_reached():
                 log.info("Reached --max-products=%d, stopping", max_products)
                 return
 
         mark_visited(page_url)
-        visited.add(page_url)
+        state.visited.add(page_url)
         if next_url:
             listing_queue.append(next_url)
 
-    log.info("Queue empty, crawl finished. Saved %d products this run.", saved)
+    log.info("Queue empty, crawl finished. Saved %d products this run.", state.saved)
 
 
 def main() -> None:
@@ -415,6 +501,8 @@ def main() -> None:
         help="stop after saving this many products (default: run until the queue is empty)",
     )
     args = parser.parse_args()
+    setup_logging()
+    _load_cookie()
     try:
         crawl(args.max_products)
     except KeyboardInterrupt:

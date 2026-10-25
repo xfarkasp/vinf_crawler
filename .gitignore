@@ -9,3 +9,4 @@ __pycache__/
 docs/
 .DS_Store
 gemini-code-*.md
+index/

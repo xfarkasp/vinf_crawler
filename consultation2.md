@@ -16,7 +16,7 @@ No crawling frameworks (Scrapy, Selenium, …) and no HTML parser. The site rend
 
 ## Diagram architektúry vášho crawl systému
 
-![Crawler architecture](diagram/crawler_architecture.png)
+![Crawler architecture](diagram/vinf_crawler.drawio.png)
 
 - **Seed:** the paginated home page `/`, `/2`, … (~96k pages × 50 products). Category pages redirect to `/facets/`, which robots.txt disallows.
 - **Strategy:** breadth-first: one listing page, its 50 products, then the next page.

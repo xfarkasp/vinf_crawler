@@ -15,7 +15,7 @@ No crawling frameworks (Scrapy, Selenium, …) and no HTML parser. The site rend
 
 ===== Architecture diagram =====
 
-{{crawler_architecture.png?900|Crawler architecture}}
+{{vinf_crawler.drawio.png?900|Crawler architecture}}
 
   * **Seed:** the paginated home page ''/'', ''/2'', ''/3'', … (~96,000 pages × 50 products).
   * **Strategy:** breadth-first — one listing page, its 50 products, then the next listing page.

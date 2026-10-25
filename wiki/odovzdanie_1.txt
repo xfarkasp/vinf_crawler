@@ -1,0 +1,282 @@
+====== Submission 1 — Food product search engine (OpenFoodFacts) ======
+
+Code: [[https://github.com/xfarkasp/vinf_crawler]] · ZIP: {{vinf_crawler.zip|vinf_crawler.zip}}
+
+===== 1. Project description =====
+
+A search engine over food products: name, brands, categories, ingredients, additives (E-numbers), allergens, Nutri-Score, Green-Score (Eco-Score) and nutrition facts. Users search for products that fit their diet or allergies, e.g. //breakfast cereals with Nutri-Score A and no palm oil//. In part 2 the products will be joined with Wikipedia through brands and additives (owner companies, what an additive is and its health context).
+
+===== 2. Crawled site and extracted data =====
+
+Site: [[https://world.openfoodfacts.org]] — product pages such as [[https://world.openfoodfacts.org/product/3017620422003/nutella-ferrero]], downloaded as raw HTML (no API, JSON dumps or FTP data).
+
+Extracted fields: ''product_name'', ''brands'', ''quantity'', ''categories'', ''labels'', ''countries'', ''nutri_score'', ''eco_score'', ''ingredients_text'' + ''ingredients_language'', ''additives'' + ''additive_names'', ''allergens'', ''traces'', ''nutrition_100g'' (kcal, fat, carbohydrates, sugars, proteins).
+
+==== 5 examples of extracted data ====
+
+^ Product ^ Brands ^ Nutri / Green ^ Additives ^ Allergens ^ Per 100 g ^ Categories (first) ^
+| [[https://world.openfoodfacts.org/product/3017620422003|Nutella]] (400 g) | Nutella, Ferrero | E / – | E322, E322i (Lecithins) | milk, nuts, soybeans | 539 kcal, fat 30.9 g, sugars 56.3 g, proteins 6.3 g | Breakfasts, Spreads, Sweet spreads |
+| [[https://world.openfoodfacts.org/product/5000169061046|Baked Beans In Tomato Sauce]] (400 g) | Essential Waitrose | A / A | E160c (Paprika extract) | – | 85 kcal, fat 0.5 g, sugars 3.8 g, proteins 7.8 g | Plant-based foods, Legumes |
+| [[https://world.openfoodfacts.org/product/6111246721261|Fromage Blanc Nature]] (1 kg) | Milky Food Professional | C / B | E202 (Potassium sorbate) | milk | 80 kcal, fat 12 g, sugars 4 g, proteins 7.3 g | Dairies, Fermented foods |
+| [[https://world.openfoodfacts.org/product/3270160742189|2 filets de Daurade Royale avec peau]] (200 g) | Picard | A / – | – | fish | 132 kcal, fat 6.2 g, sugars 0.5 g, proteins 19 g | Seafood, Fishes |
+| [[https://world.openfoodfacts.org/product/4056489615910|Peanut Butter Smooth]] | Maribel | C / E | – | peanuts | 613 kcal, fat 49.7 g, sugars 6.6 g, proteins 24.7 g | Plant-based foods, Legumes |
+
+One full record (''products_data.jsonl'', shortened):
+
+<code json>
+{"url": "https://world.openfoodfacts.org/product/3017620422003/nutella",
+ "barcode": "3017620422003", "product_name": "Nutella", "brands": ["Nutella", "Ferrero"],
+ "quantity": "400 g e", "categories": ["Breakfasts", "Spreads", "Sweet spreads", "..."],
+ "countries": ["France"], "nutri_score": "E", "eco_score": null,
+ "ingredients_text": "Sugar, vegetable fat (palm), hazelnuts (13%), skimmed milk powder (8.7%), ...",
+ "ingredients_language": "English", "additives": ["E322", "E322i"],
+ "additive_names": ["Lecithins", "Lecithin"], "allergens": ["milk", "nuts", "soybeans"],
+ "nutrition_100g": {"energy-kcal": 539.0, "fat": 30.9, "carbohydrates": 57.5, "sugars": 56.3, "proteins": 6.3}}
+</code>
+
+===== 3. Example questions and answers =====
+
+Answered by the current search engine (part 1). Questions about what an additive is or who owns a brand need Wikipedia (part 2) — see the project page.
+
+^ # ^ Question ^ Query ^ Answer (top results) ^
+| 1 | Which breakfast cereals have Nutri-Score A and contain no palm oil? | ''breakfast cereals nutri:a -palm*'' | Τραγανές Μπουκιές (Quaker), Ready Oats (Asda), Granola (Delhaize) |
+| 2 | Which sodas contain aspartame (E951)? | ''soda +e951'' | American Cream Soda (A.G. Barr), Fresca Sparkling Soda Water (Fresca); also a chocolate wafer, whose ingredients contain //baking soda// |
+| 3 | Vegan protein bars with less than 5 g of sugar per 100 g? | ''+vegan protein bar sugars<5'' | Vegan Protein 3K Bar (Nu3), Fit Vegan Bar (Fit), IQ Bar 18 (IQ Bar) |
+| 4 | Hazelnut spreads without palm oil? | ''hazelnut spread -palm*'' | Milk Crème Spread With Hazelnuts (Lidl), Dark Chocolate Spread (Lindt) |
+| 5 | Organic dark chocolate with a Green-Score A or B? | ''organic dark chocolate eco:a,b'' | Dark Chocolate Coconut Bar (UNREAL), Organic cookies with dark chocolate (Ekibio), Organic Granola (Nature's Path) |
+
+Query syntax: ''+term'' the product must contain the term, ''-term'' excludes a term, ''-palm*'' excludes every term starting with //palm// (the data is multilingual: //palme//, //palmiste//, //palmöl//), ''nutri:a'' / ''eco:a,b'' filter by score, ''sugars<5'', ''proteins>20'', ''kcal<200'' filter by nutrition per 100 g.
+
+===== 4. Frameworks and libraries =====
+
+^ Library ^ Used for ^ Why ^
+| Python 3.9+ | everything | |
+| ''requests'' | HTTP | Sessions (keep-alive, shared headers and cookie), control over timeouts and redirects |
+| ''re'' (stdlib) | link and data extraction | Extraction with regular expressions, not by the exact page structure (XPath/DOM) |
+| ''urllib.robotparser'' (stdlib) | robots.txt | Standard parser for the robots exclusion protocol |
+| ''gzip'', ''json'' (stdlib) | storage | Compressed HTML cache, JSON Lines data, JSON index — no database |
+| ''unittest'' (stdlib) | tests | Unit tests of the regex extractors |
+| ''tiktoken'' (optional) | statistics | Token count (bonus) |
+
+Indexer and search engine are our own code (no Lucene). No crawling frameworks (Scrapy, Selenium) and no HTML parser.
+
+===== 5. Architecture of the crawler =====
+
+{{vinf_crawler.drawio.png?900|Architecture of the crawler and the search pipeline}}
+
+The system has two steps that communicate only through files on disk (no database).
+
+**Step 1 — downloading (''crawler.py'')**
+
+  * **Seed:** the paginated home page ''/'', ''/2'', … (~96,000 pages × 50 products). Category pages (''/category/...'') redirect to ''/facets/...'', which robots.txt disallows, so they are not used.
+  * **Strategy:** breadth-first — one listing page, then its 50 products, then the next listing page. Product links and the "Next" link are found with regular expressions.
+  * **Politeness layer:** every request goes through ''fetch()'': robots.txt check, at least 1 s between requests, identifying headers, retries, and redirects followed manually so each hop is checked against robots.txt (details in section 7).
+  * **Deduplication:** one document per product barcode; already downloaded barcodes are skipped.
+  * **Storage:** raw HTML gzipped in folders named by the first 3 barcode digits, one metadata record per request (section 6), and the list of finished URLs.
+  * **Robustness:** a listing page is marked finished only after all its products are saved, so a restart continues exactly where the crawl stopped. Products that failed are retried at the next start. When the network is down (laptop asleep), the crawler pauses and continues instead of stopping.
+
+**Step 2 — parsing and indexing (run separately, no downloading)**
+
+  * ''extractor.py'' — regex extraction of product fields from the stored HTML → ''products_data.jsonl''.
+  * ''indexer.py'' — own inverted index with term frequencies → ''index/index.json'' (section 10).
+  * ''search.py'' — TF-IDF cosine ranking with three idf methods and query filters (sections 11–12).
+  * ''stats.py'' — statistics of the crawl and the products (section 13).
+
+Each stage reads the previous stage's file, so any stage can be re-run on its own: extraction bugs were fixed and the index rebuilt several times without downloading anything again.
+
+===== 6. Metadata stored while crawling =====
+
+One record per HTTP fetch (also failed ones) in ''crawl_metadata.jsonl'':
+
+^ Field ^ Example ^ Meaning ^
+| ''url'' | ''.../product/7622202334009/dairy-milk'' | Requested URL |
+| ''final_url'' | ''.../product/7622202334009/dairy-milk-cadbury'' | URL after redirects |
+| ''page_type'' | ''product'' | ''listing'' or ''product'' |
+| ''barcode'' | ''7622202334009'' | Product ID |
+| ''fetched_at'' | ''2026-10-10T19:31:44+00:00'' | Time of the fetch (UTC) |
+| ''status'' | ''200'' | HTTP status |
+| ''content_type'' | ''text/html; charset=UTF-8'' | Content type |
+| ''attempts'' | ''1'' | Number of attempts |
+| ''elapsed_ms'' | ''1826'' | Duration incl. retries and redirects |
+| ''size_bytes'' | ''173323'' | Raw HTML size |
+| ''size_gzip_bytes'' | ''26164'' | Size on disk |
+| ''html_path'' | ''html/products/762/7622202334009.html.gz'' | Stored file |
+| ''links_found'' | ''50'' | Product links found (listing pages) |
+| ''error'' | ''null'' / ''HTTP 401'' | Reason of a failure |
+
+===== 7. Headers, timeouts and sleeps =====
+
+^ Setting ^ Value ^ Reason ^
+| ''User-Agent'' | ''University IR Project Crawler / Contact: xfarkasp@stuba.sk'' | The crawler identifies itself with a contact; it does not pretend to be a browser |
+| ''Accept'' | ''text/html,application/xhtml+xml'' | Only HTML is needed |
+| ''Accept-Language'' | ''en'' | English labels ("Brands:", "Allergens:") that the regexes rely on |
+| ''Cookie'' | session of a registered account | Listing pages beyond ''/10'' return HTTP 401 to anonymous users ("Due to heavy abuse from robots… create a free account") |
+| Sleep | 1 s between all requests | At most 1 request per second to the site, as recommended in the lecture; raised automatically if robots.txt sets a higher ''Crawl-delay'' |
+| Timeout | 20 s | Pages are 200–800 KB and usually arrive in ~1 s |
+| Retries | 3 attempts, waiting 2 s and 4 s | Only for 5xx, 429 and network errors; 4xx are not retried |
+| Network outage | wait 1, 2, 4 … 10 min, then retry | A sleeping laptop or lost Wi-Fi pauses the crawl instead of ending it |
+| Redirects | followed manually, max 5 | Every hop is checked against robots.txt (''/api'', ''/cgi'', ''/facets'' are disallowed) |
+
+===== 8. Code: URL extraction =====
+
+[[https://github.com/xfarkasp/vinf_crawler/blob/main/crawler.py#L264|crawler.py#L264]] — listing pages draw their product grid with JavaScript from data embedded in the HTML, so product links are found with a regex over the raw HTML. Every product URL has the form ''/product/<barcode>/<name>''; the barcode is the product's unique ID.
+
+<code python>
+PRODUCT_LINK_RE = re.compile(r"/product/(\d{4,})(?:/([A-Za-z0-9_.%-]*))?")
+NEXT_PAGE_RE = re.compile(r'<a\s[^>]*href="([^"]+)"[^>]*>\s*Next\s*</a>', re.IGNORECASE)
+
+
+def extract_product_links(html: str) -> list:
+    """Return the product URLs found on a listing page (one per barcode)."""
+    slugs = {}  # barcode -> slug; keep the URL with a slug to avoid a redirect
+    for code, slug in PRODUCT_LINK_RE.findall(html):
+        if not slugs.get(code):
+            slugs[code] = slug
+    return [
+        f"{BASE_URL}/product/{code}/{slug}" if slug else f"{BASE_URL}/product/{code}"
+        for code, slug in slugs.items()
+    ]
+</code>
+
+===== 9. Code: entity extraction =====
+
+[[https://github.com/xfarkasp/vinf_crawler/blob/main/extractor.py|extractor.py]] uses only regular expressions. The patterns match visible labels, link texts, image names and text patterns, not the nesting of the page:
+
+<code python>
+# A characteristics field by its visible label: <span class="field">Brands: </span> ... </p>
+FIELD_RE_TEMPLATE = r'<span class="field">\s*{label}\s*:?\s*</span>(.*?)</p>'
+# Score badges are images named e.g. nutriscore-e-new-en.svg
+NUTRISCORE_RE = re.compile(r"nutriscore-([a-e])[-.]")
+# Additive headings: "E951 - Aspartame"
+ADDITIVE_HEADING_RE = re.compile(r"<h4[^>]*>\s*(E\d{3,4}[a-z]?)\s+-\s+([^<]*?)\s*</h4>", re.IGNORECASE)
+
+
+def extract_field(page: str, label: str) -> Optional[list]:
+    """A characteristics field by its visible label, e.g. 'Brands'."""
+    match = re.search(FIELD_RE_TEMPLATE.format(label=re.escape(label)), page, re.DOTALL)
+    return (split_values(match.group(1)) or None) if match else None
+</code>
+
+Brands, categories, labels and countries use ''extract_field'' with their labels ([[https://github.com/xfarkasp/vinf_crawler/blob/main/extractor.py#L133|extractor.py#L133]]). Nutrition values come from the rows of the "Nutrition facts" table, from the column whose header contains "100 g" ([[https://github.com/xfarkasp/vinf_crawler/blob/main/extractor.py#L232|#L232]]).
+
+===== 10. Indexer and index =====
+
+[[https://github.com/xfarkasp/vinf_crawler/blob/main/indexer.py|indexer.py]] — our own inverted index (no database, no Lucene):
+
+  * **Document** = one relevant product (has a name and ingredients or nutrition). Its text: name, brands, categories, labels, countries, ingredients, additive codes and names, allergens, traces. Name and brands are counted twice (field boost).
+  * **Text operations:** lowercase, accents removed (''crème'' → ''creme''), split on non-alphanumeric characters, English and French stop words removed, numbers and one-letter tokens removed. No lemmatization or stemming.
+  * **Index (TF):** ''term → postings "doc:tf,doc:tf,…"'' — for every term the documents that contain it and how many times (term frequency). Postings are stored as compact strings in ''index/index.json'' and parsed only for the terms of a query. The index also stores, for each idf method, the length of every document vector (for cosine similarity).
+  * **How often it is built:** once, from scratch, after the extractor has run (9 s for 95,522 products). The crawl data is fixed between runs, so the index is not updated incrementally.
+
+^ Documents ^ Terms ^ Postings ^ Index size ^ Build time ^ Query time ^
+|  95,522|  102,150|  4,086,645|  66 MB|  9 s|  < 0.1 s|
+
+===== 11. IDF methods =====
+
+[[https://github.com/xfarkasp/vinf_crawler/blob/main/indexer.py#L102|indexer.py#L102]], [[https://github.com/xfarkasp/vinf_crawler/blob/main/search.py#L113|search.py#L113]]. N = number of documents, df = number of documents containing the term.
+
+^ Method ^ Formula ^ Property ^
+| classic | ''log10(N / df)'' | 0 for a term that is in every document |
+| smooth | ''log10(N / (1 + df)) + 1'' | Never 0 — common terms still count |
+| max | ''max(log10(max_df / (1 + df)), 0)'' | Relative to the most frequent term (max_df) instead of N; the most frequent term gets 0 |
+
+The probabilistic idf ''log((N − df) / df)'' is not used.
+
+**Ranking:** term weight = ''(1 + log10 tf) × idf'' for the document and the query; score = cosine similarity of the two vectors × the share of query terms the document contains (coordination factor, as in Lucene's classic scoring). The coordination factor stops short products that match only one query word from beating products that match all of them.
+
+===== 12. Comparison of the idf methods =====
+
+Final index of 25.10.2026 (95,522 documents). Reproduce with ''python search.py "<query>" --compare''.
+
+**Query 1: ''france cheese''**
+
+^ Term ^ df ^ classic ^ smooth ^ max ^
+| france |  56,414|  0.229|  1.229|  0.000|
+| cheese |  3,703|  1.412|  2.411|  1.183|
+
+^ # ^ classic ^ smooth ^ max ^
+| 1 | Cream Cheese (Or Blanc) | Cream Cheese (Or Blanc) | Cream Cheese (Or Blanc) |
+| 2 | Cottage cheese 2% | Cottage cheese 2% | Cottage cheese 2% |
+| 3 | Reduced Fat Soft Cheese (Waitrose) | Reduced Fat Soft Cheese (Waitrose) | Reduced Fat Soft Cheese (Waitrose) |
+| 4 | Cream Cheese (Paysan Breton) | cheddar cheese (Kraft) | Cream Cheese (Paysan Breton) |
+| 5 | Cottage Cheese (Tesco) | Fresh Goat Cheese (Chavroux) | Cottage Cheese (Tesco) |
+
+"france" is in 59 % of the products. //max// ignores it completely (idf 0) and //classic// almost; both rank purely by "cheese". //smooth// gives "france" a weight of 1.23, so cheeses sold in France (Kraft cheddar, Chavroux goat cheese) move into the top 5.
+
+**Query 2: ''organic chocolate milk''**
+
+^ Term ^ df ^ classic ^ smooth ^ max ^
+| organic |  14,822|  0.809|  1.809|  0.580|
+| chocolate |  8,861|  1.033|  2.033|  0.804|
+| milk |  41,336|  0.364|  1.364|  0.135|
+
+^ # ^ classic ^ smooth ^ max ^
+| 1 | Milk Chocolate (Feastables) | Milk Chocolate (Feastables) | Milk Chocolate (Feastables) |
+| 2 | Organic Milk Chocolate 37% (Green & Black's) | Darkside Milk Chocolate 51% (Montezuma's) | chocolate (no brand) |
+| 3 | Milk Chocolate Rice Cakes (Kallo) | Milk Chocolate Buttons 38% (Montezuma) | Rice Cakes Milk Chocolate & Coconut |
+| 4 | Rice Cakes Milk Chocolate & Coconut | Smooth operator milk chocolate (Montezuma's) | Organic Milk Chocolate 37% (Green & Black's) |
+| 5 | chocolate (no brand) | Milk Chocolate Rice Cakes (Kallo) | Dark Chocolate Bar 85% (Bio Village) |
+
+Adding 1 (//smooth//) raises the weight of the common "milk" 3.7× but of the rarer "organic" only 2.2×. The organic product drops out of the //smooth// top 5 and non-organic milk chocolates take its place. //classic// keeps the rare term important and ranks the organic product 2nd.
+
+**Query 3: ''palm oil free hazelnut spread''**
+
+^ # ^ classic ^ smooth ^ max ^
+| 1 | Hazelnut Spread (Kraft) | Hazelnut spread with Cocoa (SAÏDA) | Hazelnut Chocolate Spread (Tesco) |
+| 2 | Hazelnut Chocolate Spread (Tesco) | Hazelnut Spread (Kraft) | Hazelnut Spread (Kraft) |
+| 3 | Hazelnut spread with Cocoa (SAÏDA) | Hazelnut Chocolate Spread (Tesco) | Hazelnut & Cocoa Spread (nature's store) |
+| 4 | Hazelnut & Cocoa Spread (nature's store) | Hazelnut spread with cocoa (Nutella) | Hazelnut spread with cocoa (Nutella) |
+| 5 | Hazelnut spread with cocoa (Nutella) | Hazelnut & Cocoa Spread (nature's store) | Hazelnut Spread with Cocoa (Nutella) |
+
+All three methods return almost the same products in a different order. None of them understands "free": a bag-of-words model treats it as one more word, so spreads //with// palm oil (Nutella) rank high. The exclusion syntax solves it: ''hazelnut spread -palm*''.
+
+**Overlap of the top 10 with classic idf:**
+
+^ Query ^ smooth ^ max ^
+| france cheese |  6/10|  9/10|
+| palm oil free hazelnut spread |  9/10|  9/10|
+| organic chocolate milk |  6/10|  10/10|
+| aspartame soda |  10/10|  10/10|
+
+**Summary:** //max// returns nearly the same products as //classic// (it is roughly classic shifted by a constant) but ignores the most frequent term. //smooth// differs most: it reduces the advantage of rare, discriminative terms, which hurts queries that combine a rare term ("organic") with a common one ("milk"). //classic// gives the best results for our queries.
+
+===== 13. Statistics =====
+
+Crawl from 10.10.2026 to 25.10.2026 (stopped; the crawler is resumable):
+
+^ ^ Pages ^ Raw HTML ^ On disk (gzip) ^
+| Listing pages |  1,992|  1.5 GB|  72.7 MB|
+| Product pages |  99,328|  19.8 GB|  2.9 GB|
+^ Total |  101,320|  21.3 GB|  3.0 GB|
+
+^ ^ Count ^
+| Products extracted |  99,328|
+| Relevant products (name + ingredients or nutrition), indexed |  95,522 (96.2 %)|
+| Failed fetches (network outages, 3 × HTTP 502) — all retried successfully |  214|
+| Products still missing |  0|
+| Tokens of relevant products — own tokenizer (index terms) |  5,759,564|
+| Tokens of relevant products — tiktoken ''cl100k_base'' (bonus) |  13,183,398|
+
+Average fetch time: 1.06 s.
+
+===== 14. Unit tests (bonus) =====
+
+[[https://github.com/xfarkasp/vinf_crawler/blob/main/tests/test_extractors.py|tests/test_extractors.py]] — 22 tests, run with ''python -m unittest discover tests -v'':
+
+  * **20 product pages** (real crawled HTML in ''tests/fixtures/''): every field of the regex extractor must equal the result of an independent DOM-based parser (BeautifulSoup) from an early version of the project — 160 checked values.
+  * **Edge cases** found during development: a raw ''< 0.5 g'' in the nutrition table, the quantity ''1,5 l'', ingredients in another language (''French:''), products whose heading is only a barcode or a quantity, Green-Score A+, additive names.
+  * **Link extraction:** 50 product links on a real listing page, the "Next" link, URLs that must not match (''/products'', ''/cgi/product.pl'', ''product-search.js'').
+  * **Query parsing:** the ''+term'', ''-term'', ''-prefix*'', score and nutrition filters of the search engine.
+
+===== 15. Running the code =====
+
+<code bash>
+pip install -r requirements.txt
+python crawler.py                  # download (resumable)
+python extractor.py                # stored HTML -> products_data.jsonl
+python indexer.py                  # products_data.jsonl -> index/index.json
+python search.py "breakfast cereals nutri:a -palm"
+python search.py "organic chocolate milk" --compare    # all idf methods side by side
+python stats.py                    # statistics
+python -m unittest discover tests -v
+</code>

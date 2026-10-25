@@ -1,0 +1,221 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Architecture" id="architecture">
+    <mxGraphModel dx="1600" dy="1300" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1300" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="OpenFoodFacts search engine — architecture" style="text;html=1;whiteSpace=wrap;fontFamily=Helvetica;align=left;verticalAlign=middle;fontSize=26;fontColor=#1f2937;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="28" width="1200" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Python 3 · requests · re · urllib.robotparser · own indexer and search · storage: gzipped HTML + JSON Lines + JSON (no database, no HTML parser)" style="text;html=1;whiteSpace=wrap;fontFamily=Helvetica;align=left;verticalAlign=middle;fontSize=14;fontColor=#6b7280;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="30" y="62" width="1400" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1" value="" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#f3f6fb;strokeColor=#c3d0e3;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="30" y="100" width="1010" height="665" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1t" value="STEP 1 — crawler.py · downloading" style="text;html=1;whiteSpace=wrap;fontFamily=Helvetica;align=left;verticalAlign=middle;fontSize=18;fontColor=#2b4c7e;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="52" y="112" width="600" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="seed" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:15px"&gt;Seed: world.openfoodfacts.org/&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;paginated home page · 50 products per page&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#4a6fa5;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="150" width="420" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="listq" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:15px"&gt;Listing queue (FIFO)&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;/  →  /2  →  /3  →  …  (~96,000 pages)&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#4a6fa5;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="240" width="420" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="decision" value='&lt;b&gt;&lt;font style="font-size:14px"&gt;finished already?&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:12px"&gt;(visited_urls.txt)&lt;/font&gt;' style="rhombus;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#4a6fa5;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="155" y="323" width="270" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="skip" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:14px"&gt;skip: enqueue next page /N+1&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:12.5px"&gt;used when resuming · no request sent&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#4a6fa5;strokeWidth=1.5;dashed=1;dashPattern=5 4;" vertex="1" parent="1">
+          <mxGeometry x="80" y="435" width="420" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="regex" value='&lt;b&gt;&lt;font color="#8e2f5a" style="font-size:15px"&gt;Regex on listing HTML&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;/product/(\d{4,})/…  → 50 product URLs&lt;/font&gt;&lt;/font&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;&amp;lt;a href=…&amp;gt;Next&amp;lt;/a&amp;gt;  → next page&lt;/font&gt;&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#fdf1f6;strokeColor=#c25b86;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="520" width="420" height="92" as="geometry"/>
+        </mxCell>
+        <mxCell id="prodq" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:15px"&gt;Product queue (FIFO)&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;barcodes already downloaded are skipped&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#4a6fa5;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="645" width="420" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="a listing page is marked finished only after all its products are saved;&lt;br&gt;products that failed are retried at the next start" style="text;html=1;whiteSpace=wrap;fontFamily=Helvetica;align=center;verticalAlign=middle;fontSize=12;fontColor=#6b7280;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="714" width="420" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="fetch" value='&lt;div style="text-align:center"&gt;&lt;b&gt;&lt;font color="#8a5a00" style="font-size:17px"&gt;fetch(url) — politeness layer&lt;/font&gt;&lt;/b&gt;&lt;/div&gt;&lt;div style="font-size:13.5px;line-height:1.45"&gt;&lt;b&gt;1.&lt;/b&gt; robots.txt check&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color="#4b5563"&gt;Disallow: /api, /cgi, /facets&lt;/font&gt;&lt;br&gt;&lt;b&gt;2.&lt;/b&gt; wait ≥ 1 s since the previous request&lt;br&gt;&lt;b&gt;3.&lt;/b&gt; GET with headers&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color="#4b5563"&gt;User-Agent: University IR Project Crawler&lt;/font&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color="#4b5563"&gt;&amp;nbsp;&amp;nbsp;/ Contact: xfarkasp@stuba.sk&lt;/font&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color="#4b5563"&gt;Accept: text/html · Accept-Language: en&lt;/font&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color="#4b5563"&gt;Cookie: logged-in session&lt;/font&gt;&lt;br&gt;&lt;b&gt;4.&lt;/b&gt; timeout 20 s · up to 3 attempts&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color="#4b5563"&gt;on 5xx, 429, network errors (wait 2 s, 4 s)&lt;/font&gt;&lt;br&gt;&lt;b&gt;5.&lt;/b&gt; network down → pause and continue&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color="#4b5563"&gt;retry after 1, 2, 4 … 10 min&lt;/font&gt;&lt;br&gt;&lt;b&gt;6.&lt;/b&gt; redirects followed manually (max 5)&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;font color="#4b5563"&gt;every hop checked against robots.txt&lt;/font&gt;&lt;br&gt;&lt;b&gt;7.&lt;/b&gt; save HTML (gzip) + metadata record&lt;/div&gt;' style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#fff7e8;strokeColor=#d99a2b;strokeWidth=1.8;align=left;verticalAlign=top;spacingLeft=18;spacingTop=14;spacingRight=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="330" width="410" height="420" as="geometry"/>
+        </mxCell>
+        <mxCell id="site" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:16px"&gt;world.openfoodfacts.org&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;~4.8M products · server-rendered HTML&lt;/font&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;login required beyond listing page 10&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#f1f2f4;strokeColor=#8a94a3;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="150" width="460" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="disk" value="" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#eef7f0;strokeColor=#5a9e6f;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="280" width="460" height="440" as="geometry"/>
+        </mxCell>
+        <mxCell id="diskt" value="Disk — plain files, no database" style="text;html=1;whiteSpace=wrap;fontFamily=Helvetica;align=center;verticalAlign=middle;fontSize=16;fontColor=#2f6b42;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="290" width="460" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="file0" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:14px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;html/listings/&amp;lt;N&amp;gt;.html.gz&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;raw listing pages, gzipped&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5a9e6f;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="325" width="420" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="file1" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:13px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;html/products/&amp;lt;3 digits&amp;gt;/&amp;lt;barcode&amp;gt;.html.gz&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;raw product pages, gzipped (~30 KB each)&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5a9e6f;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="420" width="420" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="file2" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:14px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;crawl_metadata.jsonl&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;per fetch: URL, status, time, size, path, error&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5a9e6f;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="515" width="420" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="file3" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:14px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;visited_urls.txt&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;finished URLs → resume after a restart&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5a9e6f;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="610" width="420" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#f7f3fb;strokeColor=#c4b3dd;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="30" y="800" width="1010" height="460" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2t" value="STEP 2 — run separately, any time (no downloading)" style="text;html=1;whiteSpace=wrap;fontFamily=Helvetica;align=left;verticalAlign=middle;fontSize=18;fontColor=#5b3f8c;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="52" y="812" width="700" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="ain" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:13.5px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;html/products/**&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;saved product pages&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5a9e6f;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="848" width="250" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="aprog" value='&lt;b&gt;&lt;font color="#8e2f5a" style="font-size:15px"&gt;extractor.py — regex only&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:12.5px"&gt;name, brands, categories, countries, scores,&lt;/font&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:12.5px"&gt;ingredients, additives, allergens, nutrition&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#fdf1f6;strokeColor=#c25b86;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="360" y="848" width="400" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="aout" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:13.5px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;products_data.jsonl&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;1 JSON record per product&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5b3f8c;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="848" width="215" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_a1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="ain" target="aprog">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_a2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="aprog" target="aout">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bin" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:13.5px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;products_data.jsonl&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;relevant products only&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5b3f8c;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="958" width="250" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="bprog" value='&lt;b&gt;&lt;font color="#2b4c7e" style="font-size:15px"&gt;indexer.py — own inverted index&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:12.5px"&gt;tokenize · stop words · term frequency (TF)&lt;/font&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:12.5px"&gt;term → postings doc:tf · vector lengths per idf&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#eef3fb;strokeColor=#4a6fa5;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="360" y="958" width="400" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="bout" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:13.5px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;index/index.json&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;~102k terms, ~4M postings&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5b3f8c;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="958" width="215" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_b1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="bin" target="bprog">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_b2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="bprog" target="bout">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cin" value="&lt;b&gt;&lt;font color=&quot;#1f2937&quot; style=&quot;font-size:13.5px&quot;&gt;&lt;font face=&quot;Menlo, Courier New, monospace&quot;&gt;index/index.json&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#4b5563&quot; style=&quot;font-size:13px&quot;&gt;+ the user's query&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5b3f8c;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1068" width="250" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="cprog" value='&lt;b&gt;&lt;font color="#2b4c7e" style="font-size:15px"&gt;search.py — TF-IDF cosine ranking&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:12.5px"&gt;idf: classic · smooth · max&lt;/font&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:12.5px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;+term  -term  -prefix*  nutri:a  sugars&amp;lt;5&lt;/font&gt;&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#eef3fb;strokeColor=#4a6fa5;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1068" width="400" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="cout" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:13.5px"&gt;ranked products&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;top N with score&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5b3f8c;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1068" width="215" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_c1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="cin" target="cprog">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_c2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="cprog" target="cout">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="din" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:13.5px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;crawl_metadata.jsonl&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;&lt;font face="Menlo, Courier New, monospace"&gt;+ products_data.jsonl&lt;/font&gt;&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5a9e6f;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1178" width="250" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="dprog" value='&lt;b&gt;&lt;font color="#5b3f8c" style="font-size:15px"&gt;stats.py&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:12.5px"&gt;aggregates crawl metadata and products&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5b3f8c;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1178" width="400" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="dout" value='&lt;b&gt;&lt;font color="#1f2937" style="font-size:13.5px"&gt;statistics&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color="#4b5563" style="font-size:13px"&gt;pages, sizes, relevant, tokens&lt;/font&gt;' style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fillColor=#ffffff;strokeColor=#5b3f8c;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1178" width="215" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_d1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="din" target="dprog">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_d2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="dprog" target="dout">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="seed" target="listq">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="listq" target="decision">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="no → listing page" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.083;entryDx=0;entryDy=0;" edge="1" parent="1" source="decision" target="fetch">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="decision" target="skip">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" value="listing HTML" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;exitX=0;exitY=0.562;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="fetch" target="regex">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="product URLs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;" edge="1" parent="1" source="regex" target="prodq">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" value="product page" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.821;entryDx=0;entryDy=0;" edge="1" parent="1" source="prodq" target="fetch">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="skip" target="listq">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="54" y="461"/>
+              <mxPoint x="54" y="270"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" value="next listing page" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="regex" target="listq">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="54" y="566"/>
+              <mxPoint x="54" y="270"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" value="HTTPS GET ⇄ HTML" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;startArrow=block;startFill=1;labelBackgroundColor=none;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="fetch" target="site">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="805" y="195"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" value="save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;exitX=1;exitY=0.452;exitDx=0;exitDy=0;entryX=0;entryY=0.545;entryDx=0;entryDy=0;" edge="1" parent="1" source="fetch" target="disk">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" value="saved files are read later by step 2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#8a94a3;strokeWidth=1.6;endArrow=block;endFill=1;dashed=1;dashPattern=6 5;labelBackgroundColor=none;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="disk" target="ain">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1310" y="782"/>
+              <mxPoint x="44" y="782"/>
+              <mxPoint x="44" y="883"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="aout" target="bin">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="907" y="938"/>
+              <mxPoint x="185" y="938"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontFamily=Helvetica;fontSize=12;fontColor=#374151;strokeColor=#3d4a5c;strokeWidth=1.6;endArrow=block;endFill=1;labelBackgroundColor=none;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="bout" target="cin">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="907" y="1048"/>
+              <mxPoint x="185" y="1048"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

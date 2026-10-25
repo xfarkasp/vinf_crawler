@@ -1,0 +1,431 @@
+{
+ "6111242100992": {
+  "product_name": "Perly",
+  "brands": [
+   "Jaouda"
+  ],
+  "nutri_score": "A",
+  "eco_score": "B",
+  "ingredients_text": "milk cream, cream, sugar, banana, bacteria",
+  "additives": null,
+  "allergens": [
+   "banana",
+   "milk"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 97.0,
+   "fat": 3.0,
+   "carbohydrates": 9.4,
+   "sugars": 9.4,
+   "proteins": 8.0
+  }
+ },
+ "3046920022651": {
+  "product_name": "EXCELLENCE 70% CACAO NOIR INTENSE",
+  "brands": [
+   "LINDT SPRUNGLI SAS"
+  ],
+  "nutri_score": "E",
+  "eco_score": "E",
+  "ingredients_text": "cocoa paste, sugar, cocoa butter, vanilla",
+  "additives": null,
+  "allergens": null,
+  "nutrition_100g": {
+   "energy-kcal": 566.0,
+   "fat": 41.0,
+   "carbohydrates": 35.0,
+   "sugars": 30.0,
+   "proteins": 9.5
+  }
+ },
+ "3327272107969": {
+  "product_name": "Menguy's Peanut 100%",
+  "brands": [
+   "Menguy's"
+  ],
+  "nutri_score": "A",
+  "eco_score": "D",
+  "ingredients_text": "100% peanuts",
+  "additives": null,
+  "allergens": [
+   "peanuts"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 610.0,
+   "fat": 48.0,
+   "carbohydrates": 13.0,
+   "sugars": 6.2,
+   "proteins": 28.0
+  }
+ },
+ "3412290070101": {
+  "product_name": "Fromage à tartiner Nature fouetté MADAME LOIK - 180g",
+  "brands": [
+   "Le Fromage Fouetté Madame Loïk",
+   "Paysan breton"
+  ],
+  "nutri_score": "D",
+  "eco_score": "C",
+  "ingredients_text": "fresh cheese, guérande salt (1.1%)",
+  "additives": null,
+  "allergens": [
+   "milk"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 252.0,
+   "fat": 24.0,
+   "carbohydrates": 3.0,
+   "sugars": 3.0,
+   "proteins": 5.9
+  }
+ },
+ "5411188110835": {
+  "product_name": "MANDORLA TOSTATA DEL MEDITERRANEO",
+  "brands": [
+   "Danone Belux nv"
+  ],
+  "nutri_score": "C",
+  "eco_score": "B",
+  "ingredients_text": "Water, almond (2,3%), sugar, tri-calcium phosphate, sea salt, stabilisers (locust bean gum, gellan gum), emulsifier (lecithins (sunflower)], natural flavouring, vitamins (B2, B12, E, D2]. May contain traces of nuts (no peanuts).",
+  "additives": [
+   "E322",
+   "E418"
+  ],
+  "allergens": [
+   "nuts"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 23.0,
+   "fat": 1.2,
+   "carbohydrates": 2.6,
+   "sugars": 2.4,
+   "proteins": 0.5
+  }
+ },
+ "8002270014901": {
+  "product_name": "S. Pellegrino Water",
+  "brands": [
+   "San Pellegrino",
+   "S. pellegrino"
+  ],
+  "nutri_score": "A",
+  "eco_score": null,
+  "ingredients_text": "water 100% Gaz carbonique ajouté",
+  "additives": null,
+  "allergens": null,
+  "nutrition_100g": {
+   "energy-kcal": 0.0,
+   "fat": 0.0,
+   "carbohydrates": 0.0,
+   "sugars": 0.0,
+   "proteins": 0.0
+  }
+ },
+ "3229820769165": {
+  "product_name": "Muesli avoine chocolat",
+  "brands": [
+   "BJORG ET CIE"
+  ],
+  "nutri_score": "A",
+  "eco_score": "A",
+  "ingredients_text": "whole oatmeal 45%, crispy oatmeal - 33% (whole oats - 26%, honey), chocolate corn petals 7% [corn petals, raw cane sugar, sea salt, butt malt, raw cane sugar, cocoa butter, cocoa paste, whole milk powder, coating agent: gum arabic], chocolate 7% (cocoa paste, raw cane sugar) , cocoa butter), whole spelt flakes (wheat) 5%, cocoa cents 3% (wheat flour, raw cane sugar, oatmeal, lean cocoa powder, barley malt flour), organic ingredients",
+  "additives": [
+   "E414"
+  ],
+  "allergens": [
+   "gluten",
+   "milk"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 386.0,
+   "fat": 8.8,
+   "carbohydrates": 60.0,
+   "sugars": 8.2,
+   "proteins": 12.0
+  }
+ },
+ "3033710084913": {
+  "product_name": "Arome MAGGI",
+  "brands": [
+   "Maggi",
+   "Nestlé"
+  ],
+  "nutri_score": null,
+  "eco_score": null,
+  "ingredients_text": "flavors (wheat protein) water - salt - flavor enhancers : monosodium glutamate, inosinate disodium - sugar",
+  "additives": [
+   "E621",
+   "E631"
+  ],
+  "allergens": [
+   "gluten"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 69.0,
+   "fat": 0.5,
+   "carbohydrates": 6.5,
+   "sugars": 3.5,
+   "proteins": 9.8
+  }
+ },
+ "3760020508012": {
+  "product_name": "Aliment sans gluten, pain",
+  "brands": [
+   "NATURENVIE"
+  ],
+  "nutri_score": "A",
+  "eco_score": "A+",
+  "ingredients_text": "buckwheat flour* 80%, rice flour*, sea salt",
+  "additives": null,
+  "allergens": null,
+  "nutrition_100g": {
+   "energy-kcal": 362.0,
+   "fat": 2.3,
+   "carbohydrates": 72.0,
+   "sugars": 1.0,
+   "proteins": 11.0
+  }
+ },
+ "3760049795479": {
+  "product_name": "Toastiligne",
+  "brands": [
+   "Boulangère"
+  ],
+  "nutri_score": "B",
+  "eco_score": "A",
+  "ingredients_text": "wheat flour* 51%, water, wheat gluten, yeast, brown flaxseed 2,1%, wheat fibre, yellow flaxseed 1,9%, millet seeds 1,9%, shelled sunflower seeds 1,2%, salt, roasted malted wheat flour 0,7%, vinegar, buckwheat seeds 0,6%, emulsifier: mono - and fatty acid diglycerides (rapeseed), grey poppy seeds 0,4%, preservative: calcium propionate, psyllium, acerola extract",
+  "additives": [
+   "E282",
+   "E300"
+  ],
+  "allergens": [
+   "gluten"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 247.0,
+   "fat": 2.9,
+   "carbohydrates": 42.0,
+   "sugars": 3.8,
+   "proteins": 11.0
+  }
+ },
+ "3760049798845": {
+  "product_name": "Pain de mie Avoine & Graines x 14 tranches",
+  "brands": [
+   "La BOULANGÈRE"
+  ],
+  "nutri_score": "A",
+  "eco_score": "B",
+  "ingredients_text": "wheat flour* 34%, water, oat flour 10.5%, brown flaxseed 10.5%, wheat gluten, shelled sunflower seeds 4.4%, yeast, devitalized devitalized rye sourdough starter, salt, blue poppy seeds 0.8%, vinegar, natural flavouring (contains alcohol), preservative: calcium propionate, deactivated yeast, antioxidant: ascorbic acid, possible traces of soya, sesame seeds and mustard, *ingredient from french fair trade",
+  "additives": [
+   "E282",
+   "E300"
+  ],
+  "allergens": [
+   "gluten"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 274.0,
+   "fat": 9.1,
+   "carbohydrates": 33.0,
+   "sugars": 2.2,
+   "proteins": 12.0
+  }
+ },
+ "3229820787008": {
+  "product_name": "Lait d'amande",
+  "brands": [
+   "Bjorg"
+  ],
+  "nutri_score": "C",
+  "eco_score": "A+",
+  "ingredients_text": "almond milk* (water, almonds* 2,8%), red cane sugar* 3,8%, rice starch*, seaweed lithothamnium calcareum 0,4%, sea salt, *organic ingredients",
+  "additives": null,
+  "allergens": [
+   "nuts"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 29.0,
+   "fat": 1.2,
+   "carbohydrates": 4.6,
+   "sugars": 3.3,
+   "proteins": 0.5
+  }
+ },
+ "3229820004334": {
+  "product_name": "Le cookie Chocolat Noisette",
+  "brands": [
+   "Bjorg"
+  ],
+  "nutri_score": "D",
+  "eco_score": "B",
+  "ingredients_text": "red cane sugar 20%, wheat flour, dark chocolate chips 17,5% (cane sugar, cocoa paste, cocoa butter), whole wheat flour 15,5%, rapeseed oil, hazelnuts 7,5%, acacia fibre, wheat starch, skim milk powder, whole egg powder, baking powder: ammonium carbonates, emulsifier: lecithins (soy), sea salt, sea salt",
+  "additives": [
+   "E322",
+   "E503"
+  ],
+  "allergens": [
+   "eggs",
+   "gluten",
+   "milk",
+   "nuts",
+   "soybeans"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 506.0,
+   "fat": 26.0,
+   "carbohydrates": 58.0,
+   "sugars": 30.0,
+   "proteins": 6.7
+  }
+ },
+ "3228857000883": {
+  "product_name": "Extra moelleux nature",
+  "brands": [
+   "Harrys"
+  ],
+  "nutri_score": "C",
+  "eco_score": "A",
+  "ingredients_text": "wheat flour 69%, water, rapeseed oil, yeast, flavor (contains alcohol), salt, vinegar, wheat gluten, bean flour, acerola extract, may contain traces of eggs, soy, milk, sesame seeds",
+  "additives": null,
+  "allergens": [
+   "gluten"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 278.0,
+   "fat": 5.2,
+   "carbohydrates": 47.1,
+   "sugars": 6.5,
+   "proteins": 8.1
+  }
+ },
+ "3760324300015": {
+  "product_name": "2 Steaks végétaux et gourmands",
+  "brands": [
+   "HappyVore"
+  ],
+  "nutri_score": "A",
+  "eco_score": "B",
+  "ingredients_text": "rehydrated textured pea protein (water, pea protein (9,5%), pea extract), water, sunflower oil, faba bean protein (2,5%), pea protein (2%), potato starch, plant fiber (bamboo, plantain, potato), natural flavors, salt, beet juice concentrate, barley malt extract, maltodextrin, acidity regulators: buffered vinegar and citric acid, antioxidant: rosemary extract, stabilizer: methylcellulose",
+  "additives": [
+   "E267",
+   "E330",
+   "E392",
+   "E461"
+  ],
+  "allergens": [
+   "gluten"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 219.0,
+   "fat": 16.0,
+   "carbohydrates": 3.5,
+   "sugars": 0.5,
+   "proteins": 13.0
+  }
+ },
+ "7311070362664": {
+  "product_name": "Krisprolls",
+  "brands": [
+   "Krisprolls"
+  ],
+  "nutri_score": "D",
+  "eco_score": "A+",
+  "ingredients_text": "wheat flour* (90%), sugar, vegetable oils (rapeseed oil*, fully hydrogenated rapeseed oil), barley malt, yeast, salt",
+  "additives": null,
+  "allergens": [
+   "gluten"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 432.0,
+   "fat": 11.0,
+   "carbohydrates": 70.0,
+   "sugars": 10.0,
+   "proteins": 9.0
+  }
+ },
+ "3175681170872": {
+  "product_name": "Lentilles cuisinées, riz & soja",
+  "brands": [
+   "Céréal Bio"
+  ],
+  "nutri_score": "B",
+  "eco_score": "A+",
+  "ingredients_text": "carrots* 24%, water, green lentils* 14%, rice basmati* full * 12%, onions* 12%, soy protein * textured and rehydrated 6%, soy sauce * (water, soybeans *, wheat *, sea salt, alcohol*), olive oil* extra virgin sunflower oil*, sea salt * ingredients from organic farming",
+  "additives": null,
+  "allergens": [
+   "gluten",
+   "soybeans"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 153.0,
+   "fat": 6.4,
+   "carbohydrates": 13.0,
+   "sugars": 1.6,
+   "proteins": 6.4
+  }
+ },
+ "3073781131888": {
+  "product_name": "verse smeltkaas",
+  "brands": [
+   "KIRI",
+   "Kiri"
+  ],
+  "nutri_score": "D",
+  "eco_score": "C",
+  "ingredients_text": "pasteurized fresh milk 53% (origin: france), cream 32% (origin: france), water, milk proteins, milk mineral concentrate, lactic ferments, salt",
+  "additives": null,
+  "allergens": [
+   "milk"
+  ],
+  "nutrition_100g": {
+   "energy-kcal": 303.0,
+   "fat": 29.0,
+   "carbohydrates": 2.0,
+   "sugars": 2.0,
+   "proteins": 9.0
+  }
+ },
+ "8410109121551": {
+  "product_name": "cacao puro",
+  "brands": [
+   "CHOCOLATES VALOR S.A."
+  ],
+  "nutri_score": null,
+  "eco_score": "F",
+  "ingredients_text": "defatted cocoa powder, acidity correctors potassium carbonate, potassium hydroxide",
+  "additives": [
+   "E501",
+   "E501i",
+   "E525"
+  ],
+  "allergens": null,
+  "nutrition_100g": {
+   "energy-kcal": 375.0,
+   "fat": 16.0,
+   "carbohydrates": 16.3,
+   "sugars": 0.7,
+   "proteins": 25.5
+  }
+ },
+ "8712100724572": {
+  "product_name": "Levure Chimique Alsacienne",
+  "brands": [
+   "Alsa"
+  ],
+  "nutri_score": null,
+  "eco_score": "B",
+  "ingredients_text": "sodium diphosphates, sodium carbonates, corn starch",
+  "additives": [
+   "E450"
+  ],
+  "allergens": null,
+  "nutrition_100g": {
+   "energy-kcal": 71.0,
+   "fat": 0.0,
+   "carbohydrates": 18.0,
+   "sugars": null,
+   "proteins": 0.011
+  }
+ }
+}
