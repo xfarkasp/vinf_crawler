@@ -1,0 +1,97 @@
+====== Consultation 2 — Crawler ======
+
+Source: [[https://world.openfoodfacts.org]] — product pages downloaded as raw HTML (no API, JSON dumps or FTP data).
+
+===== Libraries =====
+
+^ Library ^ Used for ^ Why ^
+| Python 3.9+ | everything | |
+| ''requests'' | HTTP | Sessions (keep-alive, shared headers and cookie), control over timeouts and redirects |
+| ''re'' (stdlib) | link and data extraction | Extraction with regular expressions, not by the exact page structure (XPath/DOM) |
+| ''urllib.robotparser'' (stdlib) | robots.txt | Standard parser for the robots exclusion protocol |
+| ''gzip'', ''json'' (stdlib) | storage | Compressed HTML cache and JSON Lines metadata — no database |
+
+No crawling frameworks (Scrapy, Selenium, …) and no HTML parser. The site renders on the server, so JavaScript execution is not needed.
+
+===== Architecture diagram =====
+
+{{crawler_architecture.png?900|Crawler architecture}}
+
+  * **Seed:** the paginated home page ''/'', ''/2'', ''/3'', … (~96,000 pages × 50 products).
+  * **Strategy:** breadth-first — one listing page, its 50 products, then the next listing page.
+  * **Deduplication:** one document per product barcode.
+  * **Resuming:** ''visited_urls.txt'' lists finished pages; everything is written to disk immediately, so the crawl continues where it stopped.
+  * **Crawling and extraction are separate:** the crawler only downloads and finds links. The regex extractor runs later over the stored HTML, so it can be improved and re-run without downloading again.
+
+==== Change from the project plan: no category pages ====
+
+The plan was to discover products through category pages (//Snacks//, //Beverages//, …). All category and brand URLs (''/category/...'', ''/brand/...'') now redirect to ''/facets/...'', which robots.txt disallows for all crawlers:
+
+<code>
+User-agent: *
+Disallow: /api
+Disallow: /cgi
+Disallow: /facets
+</code>
+
+To respect robots.txt, the crawler starts from the paginated home page instead, which lists every product and is allowed. The crawler checks robots.txt on every redirect, so it cannot end up in ''/facets/'' by accident. Categories are still extracted from each product page, so products can be filtered by category after crawling.
+
+===== Headers, timeout and sleep =====
+
+^ Setting ^ Value ^ Reason ^
+| ''User-Agent'' | ''University IR Project Crawler / Contact: xfarkasp@stuba.sk'' | The crawler identifies itself with a contact; it does not pretend to be a browser |
+| ''Accept'' | ''text/html,application/xhtml+xml'' | Only HTML is needed |
+| ''Accept-Language'' | ''en'' | English labels ("Brands:", "Allergens:") that the regexes rely on |
+| ''Cookie'' | session of a registered account | Listing pages beyond ''/10'' return HTTP 401 to anonymous users ("Due to heavy abuse from robots… create a free account") |
+| Sleep | 1 s between all requests | At most 1 request per second to the site, as recommended in the lecture; raised automatically if robots.txt sets a higher ''Crawl-delay'' |
+| Timeout | 20 s | Pages are 200–800 KB and usually arrive in ~1 s |
+| Retries | 3 attempts, waiting 2 s and then 4 s | Only for 5xx, 429 and network errors; 4xx errors are not retried |
+| Redirects | followed manually, max 5 | Each hop is checked against robots.txt |
+
+===== Crawler implementation =====
+
+^ File ^ Contents ^
+| ''crawler.py'' | ''fetch()'' — politeness, retries, redirects; ''extract_product_links()'' — regex link extraction; ''save_html()'', ''save_metadata()'' — storage; ''crawl()'' — main loop |
+| ''extractor.py'' | Regex extraction of product fields from the stored HTML → ''products_data.jsonl'' |
+| ''stats.py'' | Page counts, sizes on disk, failures |
+
+**URL extraction.** Listing pages draw their product grid with JavaScript from data embedded in the page, so product links are found with a regex over the raw HTML instead of ''<a href>'' tags. Every product has a URL of the form ''/product/<barcode>/<name>''; the barcode is the product's unique ID.
+
+<code python>
+PRODUCT_LINK_RE = re.compile(r"/product/(\d{4,})(?:/([A-Za-z0-9_.%-]*))?")
+NEXT_PAGE_RE = re.compile(r'<a\s[^>]*href="([^"]+)"[^>]*>\s*Next\s*</a>', re.IGNORECASE)
+</code>
+
+===== Downloaded pages =====
+
+Crawl from 10.10.2026 to 13.10.2026:
+
+^ ^ Pages ^ Raw HTML ^ Gzipped ^
+| Listing pages |  1,096|  842.1 MB|  39.1 MB|
+| Product pages |  54,523|  11.0 GB|  1.6 GB|
+^ Total |  55,619|  11.8 GB|  1.7 GB|
+
+Average fetch time: 1.09 s. Failed fetches: 78 of 55,697 (74 network errors on the client side, 3 × HTTP 502, 1 broken connection).
+
+==== Sample of downloaded pages ====
+
+^ Barcode ^ Product page ^ Raw ^ Gzipped ^ Stored as ^
+| 6111246721261 | [[https://world.openfoodfacts.org/product/6111246721261/fromage-blanc-nature-milky-food-professional|Fromage Blanc Nature]] |  230 KB|  34 KB| ''html/products/611/6111246721261.html.gz'' |
+| 5000169061046 | [[https://world.openfoodfacts.org/product/5000169061046/baked-beans-in-tomato-sauce-essential-waitrose|Baked Beans in Tomato Sauce]] |  228 KB|  34 KB| ''html/products/500/5000169061046.html.gz'' |
+| 8410066138968 | [[https://world.openfoodfacts.org/product/8410066138968/puree-de-tomates-heinz|Purée de tomates]] |  200 KB|  30 KB| ''html/products/841/8410066138968.html.gz'' |
+| 3270160742189 | [[https://world.openfoodfacts.org/product/3270160742189/2-filets-de-daurade-royale-avec-peau-picard|2 filets de daurade royale]] |  187 KB|  29 KB| ''html/products/327/3270160742189.html.gz'' |
+| 4056489615910 | [[https://world.openfoodfacts.org/product/4056489615910/peanut-butter-smooth-maribel|Peanut Butter Smooth]] |  187 KB|  28 KB| ''html/products/405/4056489615910.html.gz'' |
+
+Product pages are stored in folders named after the first 3 digits of the barcode, so no folder holds too many files.
+
+==== Crawl metadata ====
+
+One record per fetch in ''crawl_metadata.jsonl'':
+
+<code json>
+{"url": "https://world.openfoodfacts.org/2", "final_url": "https://world.openfoodfacts.org/2",
+ "page_type": "listing", "barcode": null, "fetched_at": "2026-10-10T16:36:05+00:00",
+ "status": 200, "content_type": "text/html; charset=UTF-8", "attempts": 1, "elapsed_ms": 1154,
+ "size_bytes": 801760, "size_gzip_bytes": 36208, "html_path": "html/listings/2.html.gz",
+ "links_found": 50, "error": null}
+</code>

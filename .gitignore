@@ -1,0 +1,11 @@
+.venv/
+off_cookie.txt
+html/
+backups/
+*.jsonl
+visited_urls.txt
+crawler.log
+__pycache__/
+docs/
+.DS_Store
+gemini-code-*.md
