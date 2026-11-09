@@ -1,3 +1,4 @@
 requests>=2.31
+pyspark==3.5.3
 # optional, only for the token count in stats.py
 tiktoken

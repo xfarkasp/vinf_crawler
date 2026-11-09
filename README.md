@@ -153,6 +153,69 @@ Query syntax: `+term` (must contain), `-term` (exclude), `-palm*` (exclude every
 term starting with `palm`), `nutri:a,b`, `eco:a+`,
 `sugars<5`, `proteins>20`, `kcal<200`, `fat<10`, `carbohydrates<30`.
 
+## Distributed processing with Spark (part 2)
+
+The extraction, the Wikipedia processing and the join run on **Apache Spark 3.5.3**
+(PySpark), locally on all CPU cores or on a cluster.
+
+| Script | Input → output |
+|---|---|
+| [`spark_extract_products.py`](spark_extract_products.py) | crawled HTML → `spark_output/products` (Parquet + JSON). Runs the same regex functions as `extractor.py` on Spark workers |
+| [`spark_wiki.py`](spark_wiki.py) | English Wikipedia XML dump → `spark_output/wiki_pages`: articles (infobox type and fields, abstract, health/safety section, categories, disambiguation flag) and redirects, all extracted with regex in Spark SQL |
+| [`spark_join.py`](spark_join.py) | products ⨝ Wikipedia → `spark_output/joined`: links, joined pages, enriched products (left join), statistics |
+| [`spark_common.py`](spark_common.py) | Spark session, the join-key normalisation used on both sides |
+
+**Reading the dump.** `spark-xml` reads `enwiki-*-pages-articles.xml.bz2` with one row
+per `<page>` (as in the lecture's `read_xml.py`). Bzip2 is splittable, so one dump
+file is read in many partitions in parallel. All wikitext regexes run as Spark SQL
+functions inside the JVM, so the dump is processed in a single pass.
+
+**The join.** Products are linked to Wikipedia through four keys:
+
+| Type | Product value | Wikipedia page | How |
+|---|---|---|---|
+| brand | `Milka` | Milka (Infobox brand, owner Mondelez) | title; also `"<brand> (brand)"`, `"<brand> (company)"` — e.g. `Kinder` → *Kinder (brand)*, because `Ferrero` alone is a disambiguation page |
+| additive | `E951` | Aspartame | Wikipedia's "R from E number" redirects (`E951 → Aspartame`), else the additive's name |
+| ingredient | `palm oil` | Palm oil | English ingredient phrases (1–3 words) |
+| country | `France` | France | article with a country infobox |
+
+Both sides are normalised the same way (lowercase, no accents, alphanumerics only), and
+a match only counts when the article fits the type (a brand must hit a company/brand
+article, an ingredient a food/plant/chemical article; disambiguation pages never count).
+
+**The "small files problem".** Reading 99k small HTML files through Spark's Hadoop layer
+(`sc.binaryFiles`) was slower than the sequential extractor (per-file overhead). For a
+local disk the driver lists the paths and workers open the files directly: 34 s instead
+of 365 s (sequential: ~160 s). On HDFS use `--reader binary`.
+
+**Setup.**
+```bash
+brew install openjdk@17                       # Spark needs Java (17)
+.venv/bin/pip install -r requirements.txt     # incl. pyspark==3.5.3
+# spark-xml is downloaded automatically by Spark on the first run
+sh wiki_dump/download.sh                      # English Wikipedia dump (~26 GB) -> wiki_dump/
+```
+
+**Run.**
+```bash
+.venv/bin/python spark_extract_products.py
+.venv/bin/python spark_wiki.py                # full dump; --input <part file> for a quick run
+.venv/bin/python spark_join.py
+.venv/bin/python spark_show.py product 3017620422003   # a product and its Wikipedia links
+.venv/bin/python -m unittest tests.test_spark -v
+```
+
+**On a cluster** use `spark-submit` as in the lecture (its `--master` is respected; with
+plain `python` set `SPARK_MASTER=spark://host:7077` instead) and pass HDFS paths. The
+spark-xml package must then be given with `--packages`:
+```bash
+spark-submit --master spark://host:7077 --packages com.databricks:spark-xml_2.12:0.18.0 \
+    spark_wiki.py --input hdfs:///user/x/enwiki-latest-pages-articles.xml.bz2 --output hdfs:///user/x/wiki_pages
+```
+Statistics JSON files are written next to a local output, or into the current folder for
+HDFS outputs. Python dependencies can be shipped with
+[venv-pack](https://jcristharif.com/venv-pack/spark.html) (`--archives env.tar.gz#environment`).
+
 ## Usage
 
 ```bash
@@ -181,11 +244,14 @@ nohup .venv/bin/python crawler.py > /dev/null 2>&1 &   # in the background, log 
 | `indexer.py` | Own inverted index: `products_data.jsonl` → `index/index.json` |
 | `search.py` | Search engine: TF-IDF cosine ranking, 3 idf methods, filters |
 | `stats.py` | Crawl, product and token statistics |
-| `tests/` | Unit tests of the regex extractors, with real crawled pages as fixtures |
+| `spark_*.py` | Spark jobs: product extraction, Wikipedia dump processing, join; `spark_show.py` prints results |
+| `tests/` | Unit tests of the regex extractors (real crawled pages as fixtures) and of the Spark jobs |
 | `wiki/` | Wiki pages (DokuWiki syntax) for the consultations and the submission |
 | `html/` | Raw HTML cache (gzip) — never deleted |
 | `crawl_metadata.jsonl` | Metadata for each fetch |
 | `products_data.jsonl` | Extracted products (rebuilt by `extractor.py`) |
 | `index/` | The index (rebuilt by `indexer.py`, not committed) |
+| `wiki_dump/` | Wikipedia dump and its download script (dump not committed) |
+| `spark_output/` | Spark results: products, Wikipedia pages, join (not committed) |
 | `visited_urls.txt` | Finished URLs, used when resuming |
 | `off_cookie.txt` | Login cookie (private, not committed) |

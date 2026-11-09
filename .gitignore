@@ -10,3 +10,6 @@ docs/
 .DS_Store
 gemini-code-*.md
 index/
+wiki_dump/*
+!wiki_dump/download.sh
+spark_output/
